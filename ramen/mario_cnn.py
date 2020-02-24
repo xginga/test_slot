@@ -6,26 +6,62 @@
 
 from __future__ import print_function
 import keras
+from keras.utils import np_utils
 from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
+from sklearn.model_selection import train_test_split
+import numpy as np
 import os
+import re
 
-batch_size = 32
+#なぜか動かなかったので、追加した。
+def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
+    return [os.path.join(root, f)
+            for root, _, files in os.walk(directory) for f in files
+            if re.match(r'([\w]+\.(?:' + ext + '))', f.lower())]
+
+batch_size = 64
 num_classes = 2
-epochs = 100
+epochs = 500 
 data_augmentation = True
 num_predictions = 20
 save_dir = os.path.join(os.getcwd(), 'saved_models')
 model_name = 'keras_mario_trained_model.h5'
 
+# datasets import for mario dataset
+X=[]
+Y=[]
+
+# 対象Aの画像
+for picture in list_pictures('./images/datasets/0mario'):
+    img = img_to_array(load_img(picture, target_size=(64,64)))
+    X.append(img)
+    Y.append(0)
+
+
+# 対象Bの画像
+for picture in list_pictures('./images/datasets/1nomario'):
+    img = img_to_array(load_img(picture, target_size=(64,64)))
+    X.append(img)
+    Y.append(1)
+
+
+X=np.asarray(X)
+Y=np.asarray(Y)
+
+X=X.astype('float32')
+
+x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.33, random_state=111)
 
 
 
 # The data, split between train and test sets:
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+#(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+
 print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
@@ -87,7 +123,7 @@ else:
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
         zca_epsilon=1e-06,  # epsilon for ZCA whitening
-        rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=10, # randomly rotate images in the range (degrees, 0 to 180)
         # randomly shift images horizontally (fraction of total width)
         width_shift_range=0.1,
         # randomly shift images vertically (fraction of total height)
@@ -99,7 +135,7 @@ else:
         fill_mode='nearest',
         cval=0.,  # value used for fill_mode = "constant"
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False,  # randomly flip images
+        vertical_flip=True,  # randomly flip images
         # set rescaling factor (applied before any other transformation)
         rescale=None,
         # set function that will be applied on each input
