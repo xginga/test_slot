@@ -6,6 +6,7 @@
 
 from __future__ import print_function
 import keras
+import tensorflow as tf
 from keras.utils import np_utils
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
@@ -23,9 +24,9 @@ def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
             for root, _, files in os.walk(directory) for f in files
             if re.match(r'([\w]+\.(?:' + ext + '))', f.lower())]
 
-batch_size = 64
+batch_size = 32
 num_classes = 2
-epochs = 500 
+epochs = 200
 data_augmentation = True
 num_predictions = 20
 save_dir = os.path.join(os.getcwd(), 'saved_models')
@@ -70,7 +71,7 @@ print(x_test.shape[0], 'test samples')
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
-model = Sequential()
+model = keras.models.Sequential()
 model.add(Conv2D(32, (3, 3), padding='same',
                  input_shape=x_train.shape[1:]))
 model.add(Activation('relu'))
@@ -123,14 +124,14 @@ else:
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
         zca_epsilon=1e-06,  # epsilon for ZCA whitening
-        rotation_range=10, # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=20, # randomly rotate images in the range (degrees, 0 to 180)
         # randomly shift images horizontally (fraction of total width)
         width_shift_range=0.1,
         # randomly shift images vertically (fraction of total height)
         height_shift_range=0.1,
-        shear_range=0.,  # set range for random shear
-        zoom_range=0.,  # set range for random zoom
-        channel_shift_range=0.,  # set range for random channel shifts
+        shear_range=0.1,  # set range for random shear
+        zoom_range=0.1,  # set range for random zoom
+        channel_shift_range=0.1,  # set range for random channel shifts
         # set mode for filling points outside the input boundaries
         fill_mode='nearest',
         cval=0.,  # value used for fill_mode = "constant"
@@ -156,6 +157,11 @@ else:
                         validation_data=(x_test, y_test),
                         workers=4)
 
+# # Save as tflite model
+# converter = lite.TFLiteConverter.from_keras_model(model)
+# tflite_model = converter.convert()
+# open("mnist_model.tflite", "wb").write(tflite_model)
+
 # Save model and weights
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
@@ -163,7 +169,10 @@ model_path = os.path.join(save_dir, model_name)
 model.save(model_path)
 print('Saved trained model at %s ' % model_path)
 
+
+
 # Score trained model.
 scores = model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
+
