@@ -24,8 +24,8 @@ def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
             if re.match(r'([\w]+\.(?:' + ext + '))', f.lower())]
 
 batch_size = 64
-num_classes = 10
-epochs = 1000
+num_classes = 2
+epochs = 500 
 data_augmentation = True
 num_predictions = 20
 save_dir = os.path.join(os.getcwd(), 'saved_models')
@@ -39,7 +39,6 @@ Y=[]
 for picture in list_pictures('./images/datasets/0mario'):
     img = img_to_array(load_img(picture, target_size=(64,64)))
     X.append(img)
-
     Y.append(0)
 
 
@@ -47,7 +46,6 @@ for picture in list_pictures('./images/datasets/0mario'):
 for picture in list_pictures('./images/datasets/1nomario'):
     img = img_to_array(load_img(picture, target_size=(64,64)))
     X.append(img)
-
     Y.append(1)
 
 
@@ -56,14 +54,12 @@ Y=np.asarray(Y)
 
 X=X.astype('float32')
 
-#Y=np_utils.to_categorical(Y,2)
-
 x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.33, random_state=111)
 
 
 
 # The data, split between train and test sets:
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+#(x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
 
 print('x_train shape:', x_train.shape)
@@ -127,7 +123,7 @@ else:
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
         zca_epsilon=1e-06,  # epsilon for ZCA whitening
-        rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=10, # randomly rotate images in the range (degrees, 0 to 180)
         # randomly shift images horizontally (fraction of total width)
         width_shift_range=0.1,
         # randomly shift images vertically (fraction of total height)
@@ -139,7 +135,7 @@ else:
         fill_mode='nearest',
         cval=0.,  # value used for fill_mode = "constant"
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False,  # randomly flip images
+        vertical_flip=True,  # randomly flip images
         # set rescaling factor (applied before any other transformation)
         rescale=None,
         # set function that will be applied on each input
