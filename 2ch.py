@@ -1,24 +1,28 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Dec 14 23:22:57 2019
-
 @author: 1
 """
-
-
 import sys
 import requests
 import re
 from bs4 import BeautifulSoup
 import warnings
+import csv
+import pprint
+import time
 
+warnings.simplefilter("ignore")
+url = "http://swallow.5ch.net/livejupiter/subback.html"
 
 def thread_and_res(string):#スレッド名とレス数を返す
     #print(string) #test
     #頭3つの文字列だけのやつを切り捨てる
     if len(string.split(" ",1)) == 1:
         return None
+    number = 0
     title = string.split(" ",1)[1]#スレ順を切り捨てる
+    
     if title[-3] == '(':#レス数の桁が違うと文字列が切り取れない不具合があったのでレス数を判定
         title,number = title[:-3],title[-3:]#スレタイとレス数に分割する
     elif title[-4] == '(':
@@ -28,32 +32,29 @@ def thread_and_res(string):#スレッド名とレス数を返す
     
     number = re.findall("\((.*)\)",number)#レス数を数字にする
     
-    return title, int(number[0])
+    #return title.encode('unicode-escape'), number[0].encode('unicode-escape')
+    return title.strip(), number[0]
+    #return ascii(title), ascii(number[0])
 
-#warnings.simplefilter("ignore")
+def __init__():
+    html = requests.get(url)
+    html.encoding = html.apparent_encoding
+    soup = BeautifulSoup(html.text)
+    name = soup.find_all("a")
+    with open('./sample.csv','a', errors="ignore") as f:
+        writer = csv.writer(f)
 
-url = "http://swallow.5ch.net/livejupiter/subback.html"
-#url = "http://example.com/"
-#nanJ thread list
+        for na in name:
+            temp = na.get_text()
+            temp=thread_and_res(temp)#分割
 
-html = requests.get(url)
-#kore dato mojibake suru
-html.encoding = html.apparent_encoding
-#moji code wo nantoka sita
-#print(type(html.text))
+            if temp != None:#分割に失敗していなければ↓
+                if "5ちゃんねるへようこそ" in temp:#下の方の邪魔なやつが来たら終わる
+                    break
+                print(temp[0], temp[1])
+                f.write(temp[0]+","+temp[1]+"\n")
+                #writer.writerow(temp[0]+","+temp[1])
 
-
-soup = BeautifulSoup(html.text)
-
-name = soup.find_all("a")
-
-for na in name:#この文すごい
-    temp = na.get_text()
-    #print(temp)
-    print(thread_and_res(temp))
-
-st = "1: 123123123(2)"
-
-
-
-# #num = re.findall("\((.*)\)")
+while True:
+    __init__()
+    time.sleep(60)
