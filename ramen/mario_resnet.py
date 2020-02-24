@@ -40,13 +40,15 @@ from keras.layers import AveragePooling2D, Input, Flatten
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.callbacks import ReduceLROnPlateau
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
 from keras.regularizers import l2
 from keras import backend as K
 from keras.models import Model
 from keras.datasets import cifar10
+from sklearn.model_selection import train_test_split
 import numpy as np
 import os
+import re
 
 #なぜか動かなかったので、追加した。
 def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
@@ -218,7 +220,7 @@ def resnet_layer(inputs,
     return x
 
 
-def resnet_v1(input_shape, depth, num_classes=10):
+def resnet_v1(input_shape, depth, num_classes=2):
     """ResNet Version 1 Model builder [a]
 
     Stacks of 2 x (3 x 3) Conv2D-BN-ReLU
@@ -291,8 +293,7 @@ def resnet_v1(input_shape, depth, num_classes=10):
     model = Model(inputs=inputs, outputs=outputs)
     return model
 
-
-def resnet_v2(input_shape, depth, num_classes=10):
+def resnet_v2(input_shape, depth, num_classes=2):
     """ResNet Version 2 Model builder [b]
 
     Stacks of (1 x 1)-(3 x 3)-(1 x 1) BN-ReLU-Conv2D or also known as
@@ -401,7 +402,7 @@ print(model_type)
 
 # Prepare model model saving directory.
 save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = 'cifar10_%s_model.{epoch:03d}.h5' % model_type
+model_name = 'keras_mario_trained_model_resnet.h5'
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
 filepath = os.path.join(save_dir, model_name)
@@ -447,15 +448,15 @@ else:
         # epsilon for ZCA whitening
         zca_epsilon=1e-06,
         # randomly rotate images in the range (deg 0 to 180)
-        rotation_range=0,
+        rotation_range=10,
         # randomly shift images horizontally
         width_shift_range=0.1,
         # randomly shift images vertically
         height_shift_range=0.1,
         # set range for random shear
-        shear_range=0.,
+        shear_range=0.1,
         # set range for random zoom
-        zoom_range=0.,
+        zoom_range=0.1,
         # set range for random channel shifts
         channel_shift_range=0.,
         # set mode for filling points outside the input boundaries
@@ -484,6 +485,13 @@ else:
                         validation_data=(x_test, y_test),
                         epochs=epochs, verbose=1, workers=4,
                         callbacks=callbacks)
+
+# Save model and weights
+if not os.path.isdir(save_dir):
+    os.makedirs(save_dir)
+model_path = os.path.join(save_dir, model_name)
+model.save(model_path)
+print('Saved trained model at %s ' % model_path)
 
 # Score trained model.
 scores = model.evaluate(x_test, y_test, verbose=1)

@@ -1,7 +1,7 @@
 from PIL import Image
 import glob
 
-marioes=glob.glob("./0mario/*")
+marioes=glob.glob("./images/datasets/0mario/*")
 
 
 
