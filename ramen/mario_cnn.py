@@ -1,6 +1,7 @@
 '''
 #Train a simple deep CNN on the CIFAR10 small images dataset.
 
+It gets to 75% validation accuracy in 25 epochs, and 79% after 50 epochs.
 (it's still underfitting at that point, though).
 '''
 
